@@ -6,6 +6,9 @@
 
 @use "sass:color";
 
+// Import brand-specific variables if available
+@import "brand.variables";
+
 $white:       #ffffff !default;
 $gray-100:    #f8f9fa !default;
 $gray-200:    #e9ecef !default;

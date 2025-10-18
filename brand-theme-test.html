@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brand Theme Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: var(--surface, #ffffff);
+            color: var(--surface-contrast, #282828);
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid var(--primary, #f98012);
+            border-radius: 8px;
+        }
+
+        .primary-button {
+            background-color: var(--primary, #f98012);
+            color: var(--primary-contrast, #ffffff);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .secondary-button {
+            background-color: var(--secondary, #3b82f6);
+            color: var(--secondary-contrast, #ffffff);
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .color-display {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .primary-color { background-color: var(--primary, #f98012); }
+        .primary-shade { background-color: var(--primary-shade, #e6730a); }
+        .primary-tint { background-color: var(--primary-tint, #fb8d2a); }
+        .secondary-color { background-color: var(--secondary, #3b82f6); }
+        .surface-color { background-color: var(--surface, #ffffff); }
+    </style>
+</head>
+<body>
+    <h1>Brand Theme Test Page</h1>
+
+    <div class="test-section">
+        <h2>Brand Colors</h2>
+        <p>Primary Color: <span class="color-display primary-color"></span></p>
+        <p>Primary Shade: <span class="color-display primary-shade"></span></p>
+        <p>Primary Tint: <span class="color-display primary-tint"></span></p>
+        <p>Secondary Color: <span class="color-display secondary-color"></span></p>
+        <p>Surface Color: <span class="color-display surface-color"></span></p>
+    </div>
+
+    <div class="test-section">
+        <h2>Buttons</h2>
+        <button class="primary-button">Primary Button</button>
+        <button class="secondary-button">Secondary Button</button>
+    </div>
+
+    <div class="test-section">
+        <h2>CSS Custom Properties</h2>
+        <p>Primary: <span id="primary-value"></span></p>
+        <p>Primary Contrast: <span id="primary-contrast-value"></span></p>
+        <p>Secondary: <span id="secondary-value"></span></p>
+        <p>Surface: <span id="surface-value"></span></p>
+    </div>
+
+    <script>
+        // Display CSS custom property values
+        const root = document.documentElement;
+        const computedStyle = getComputedStyle(root);
+
+        document.getElementById('primary-value').textContent = computedStyle.getPropertyValue('--primary') || 'Not set';
+        document.getElementById('primary-contrast-value').textContent = computedStyle.getPropertyValue('--primary-contrast') || 'Not set';
+        document.getElementById('secondary-value').textContent = computedStyle.getPropertyValue('--secondary') || 'Not set';
+        document.getElementById('surface-value').textContent = computedStyle.getPropertyValue('--surface') || 'Not set';
+
+        // Apply brand theme if not already applied
+        if (!computedStyle.getPropertyValue('--primary') || computedStyle.getPropertyValue('--primary') === '#f98012') {
+            console.log('Applying brand theme...');
+            root.style.setProperty('--primary', '#1e3a8a');
+            root.style.setProperty('--primary-contrast', '#ffffff');
+            root.style.setProperty('--primary-shade', '#1a3a7a');
+            root.style.setProperty('--primary-tint', '#2a4a9a');
+            root.style.setProperty('--secondary', '#3b82f6');
+            root.style.setProperty('--secondary-contrast', '#000000');
+            root.style.setProperty('--surface', '#ffffff');
+            root.style.setProperty('--surface-contrast', '#282828');
+            root.style.setProperty('--brand-color', '#1e3a8a');
+
+            // Update display
+            setTimeout(() => {
+                document.getElementById('primary-value').textContent = computedStyle.getPropertyValue('--primary');
+                document.getElementById('primary-contrast-value').textContent = computedStyle.getPropertyValue('--primary-contrast');
+                document.getElementById('secondary-value').textContent = computedStyle.getPropertyValue('--secondary');
+                document.getElementById('surface-value').textContent = computedStyle.getPropertyValue('--surface');
+            }, 100);
+        }
+    </script>
+</body>
+</html>

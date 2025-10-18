@@ -23,6 +23,7 @@ import { CoreConstants } from '@/core/constants';
 import { CoreBaseModule } from '@/core/base.module';
 import { CoreExternalContentDirective } from '@directives/external-content';
 import { CoreFormatTextDirective } from '@directives/format-text';
+import { CoreBrandConfigProvider } from '@services/brand-config';
 
 /**
  * Component to render the current site logo.
@@ -48,6 +49,7 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
     siteName?: string;
     siteId?: string;
     siteLogo?: string;
+    brandLogo?: string;
     logoLoaded = false;
     logoError = false;
     fallbackLogo = '';
@@ -55,6 +57,8 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
     appName = CoreConstants.CONFIG.appname;
 
     protected updateSiteObserver?: CoreEventObserver;
+
+    constructor(protected brandConfig: CoreBrandConfigProvider) {}
 
     /**
      * @inheritdoc
@@ -111,6 +115,9 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
 
         this.logoError = false;
 
+        // Load brand logo if available
+        await this.loadBrandLogo();
+
         if (this.logoType === 'top' && site.getShowTopLogo() === 'hidden') {
             this.showLogo = false;
         } else {
@@ -123,6 +130,33 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
         }
 
         this.logoLoaded = true;
+    }
+
+    /**
+     * Load brand logo if brand theme is enforced.
+     */
+    protected async loadBrandLogo(): Promise<void> {
+        try {
+            const isEnforced = await this.brandConfig.isBrandThemeEnforced();
+            if (!isEnforced) {
+                return;
+            }
+
+            const brandLogo = await this.brandConfig.getLogoAsset(this.logoType);
+            if (brandLogo) {
+                this.brandLogo = brandLogo;
+            }
+        } catch (error) {
+            // Silently fail - brand logo is optional
+            console.debug('Failed to load brand logo:', error);
+        }
+    }
+
+    /**
+     * Get the logo URL to display (brand logo takes precedence).
+     */
+    getDisplayLogo(): string | undefined {
+        return this.brandLogo || this.siteLogo || this.fallbackLogo;
     }
 
     /**

@@ -19,10 +19,18 @@ import { CoreLogger } from '@singletons/logger';
 import { CorePromisedValue } from '@classes/promised-value';
 import {
     BrandConfig,
+    BrandColors,
+    BrandAssets,
     FeatureToggles,
     BrandConfigValidationResult,
     BrandConfigLoadResult
 } from '@/types/brand-config';
+import {
+    isValidHexColor,
+    getContrastRatio,
+    meetsWCAGAA,
+    generateColorVariations
+} from '@/core/utils/color-validation';
 
 /**
  * Service to manage brand configuration for white-labeling functionality.
@@ -130,6 +138,27 @@ export class CoreBrandConfigProvider {
             }
         }
 
+        // Validate colors if provided
+        if (config.colors) {
+            const colorValidation = this.validateColors(config.colors);
+            errors.push(...colorValidation.errors);
+            warnings.push(...colorValidation.warnings);
+        }
+
+        // Validate assets if provided
+        if (config.assets) {
+            const assets = config.assets;
+            if (assets.logo && typeof assets.logo !== 'string') {
+                errors.push('Logo asset path must be a string');
+            }
+            if (assets.splash && typeof assets.splash !== 'string') {
+                errors.push('Splash asset path must be a string');
+            }
+            if (assets.appIcon && typeof assets.appIcon !== 'string') {
+                errors.push('App icon asset path must be a string');
+            }
+        }
+
         // Validate feature toggles
         if (config.featureToggles) {
             const toggles = config.featureToggles;
@@ -223,6 +252,116 @@ export class CoreBrandConfigProvider {
         } catch {
             return false;
         }
+    }
+
+    /**
+     * Get brand colors configuration.
+     */
+    async getColors(): Promise<BrandColors | null> {
+        await this.ready();
+        return this.config?.colors || null;
+    }
+
+    /**
+     * Get brand logo asset path.
+     */
+    async getLogoAsset(type: 'login' | 'top' = 'login'): Promise<string | null> {
+        await this.ready();
+        return this.config?.assets?.logo || null;
+    }
+
+    /**
+     * Get brand splash asset path.
+     */
+    async getSplashAsset(): Promise<string | null> {
+        await this.ready();
+        return this.config?.assets?.splash || null;
+    }
+
+    /**
+     * Get brand app icon asset path.
+     */
+    async getAppIconAsset(): Promise<string | null> {
+        await this.ready();
+        return this.config?.assets?.appIcon || null;
+    }
+
+    /**
+     * Get all brand assets.
+     */
+    async getAssets(): Promise<BrandAssets | null> {
+        await this.ready();
+        return this.config?.assets || null;
+    }
+
+    /**
+     * Validate brand colors for accessibility.
+     */
+    validateColors(colors: BrandColors): BrandConfigValidationResult {
+        const errors: string[] = [];
+        const warnings: string[] = [];
+
+        // Validate primary color
+        if (!colors.primary || !isValidHexColor(colors.primary)) {
+            errors.push('Primary color is required and must be a valid hex color');
+        }
+
+        // Validate secondary color if provided
+        if (colors.secondary && !isValidHexColor(colors.secondary)) {
+            errors.push('Secondary color must be a valid hex color');
+        }
+
+        // Validate surface color if provided
+        if (colors.surface && !isValidHexColor(colors.surface)) {
+            errors.push('Surface color must be a valid hex color');
+        }
+
+        // Validate onPrimary color if provided
+        if (colors.onPrimary && !isValidHexColor(colors.onPrimary)) {
+            errors.push('OnPrimary color must be a valid hex color');
+        }
+
+        // Validate onSecondary color if provided
+        if (colors.onSecondary && !isValidHexColor(colors.onSecondary)) {
+            errors.push('OnSecondary color must be a valid hex color');
+        }
+
+        // Validate onSurface color if provided
+        if (colors.onSurface && !isValidHexColor(colors.onSurface)) {
+            errors.push('OnSurface color must be a valid hex color');
+        }
+
+        // Check color contrast if colors are provided
+        if (colors.primary && colors.onPrimary) {
+            if (!meetsWCAGAA(colors.primary, colors.onPrimary)) {
+                warnings.push('Primary and onPrimary colors do not meet WCAG AA contrast requirements');
+            }
+        }
+
+        if (colors.secondary && colors.onSecondary) {
+            if (!meetsWCAGAA(colors.secondary, colors.onSecondary)) {
+                warnings.push('Secondary and onSecondary colors do not meet WCAG AA contrast requirements');
+            }
+        }
+
+        if (colors.surface && colors.onSurface) {
+            if (!meetsWCAGAA(colors.surface, colors.onSurface)) {
+                warnings.push('Surface and onSurface colors do not meet WCAG AA contrast requirements');
+            }
+        }
+
+        return {
+            valid: errors.length === 0,
+            errors,
+            warnings
+        };
+    }
+
+    /**
+     * Generate color variations for a given color.
+     */
+    generateColorVariations(color: string): { shade: string; tint: string; contrast: string } | null {
+        return generateColorVariations(color);
     }
 
     /**

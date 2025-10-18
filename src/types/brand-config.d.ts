@@ -24,8 +24,42 @@ export interface BrandConfig {
     description?: string;
     /** Preconfigured Moodle site URL */
     siteUrl?: string;
+    /** Brand colors configuration */
+    colors?: BrandColors;
+    /** Brand assets configuration */
+    assets?: BrandAssets;
     /** Feature toggle configuration */
     featureToggles?: FeatureToggles;
+}
+
+/**
+ * Brand colors configuration for theming.
+ */
+export interface BrandColors {
+    /** Primary brand color */
+    primary: string;
+    /** Secondary brand color */
+    secondary?: string;
+    /** Surface color (background) */
+    surface?: string;
+    /** Text color on primary background */
+    onPrimary?: string;
+    /** Text color on secondary background */
+    onSecondary?: string;
+    /** Text color on surface background */
+    onSurface?: string;
+}
+
+/**
+ * Brand assets configuration for logos and images.
+ */
+export interface BrandAssets {
+    /** Logo asset path */
+    logo?: string;
+    /** Splash screen asset path */
+    splash?: string;
+    /** App icon asset path */
+    appIcon?: string;
 }
 
 /**

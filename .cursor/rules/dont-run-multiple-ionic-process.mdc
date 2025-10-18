@@ -1,0 +1,4 @@
+---
+alwaysApply: true
+---
+Please remember before running the application using npm please check if the application is already running at 8100 port or not. Always kill the previously running application before starting a new one. Only use 8100 port for this application.

@@ -6,6 +6,9 @@
  */
 @use "sass:list";
 
+// Import brand-specific custom properties if available
+@import "brand.custom-properties";
+
 :root {
 
     // Color palette

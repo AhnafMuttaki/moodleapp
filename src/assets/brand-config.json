@@ -2,7 +2,21 @@
     "brandId": "my-brand",
     "displayName": "My Organization Mobile",
     "siteUrl": "http://localhost:8081",
+    "colors": {
+        "primary": "#1e3a8a",
+        "secondary": "#3b82f6",
+        "surface": "#ffffff",
+        "onPrimary": "#ffffff",
+        "onSecondary": "#000000",
+        "onSurface": "#282828"
+    },
+    "assets": {
+        "logo": "assets/brands/my-brand/logo.png",
+        "splash": "assets/brands/my-brand/splash.png",
+        "appIcon": "assets/brands/my-brand/icon.png"
+    },
     "featureToggles": {
-      "preconfiguredSite": true
+        "preconfiguredSite": true,
+        "enforceBrandTheme": true
     }
 }
