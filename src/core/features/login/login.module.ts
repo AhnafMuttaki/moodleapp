@@ -22,6 +22,7 @@ import { CoreLoginCronHandler } from './services/handlers/cron';
 import { CoreCronDelegate } from '@services/cron';
 import { CoreEvents } from '@singletons/events';
 import { hasSitesGuard } from './guards/has-sites';
+import { preconfiguredSiteGuard } from './guards/preconfigured-site';
 
 /**
  * Get login services.
@@ -48,6 +49,7 @@ const appRoutes: Routes = [
             {
                 path: 'site',
                 loadComponent: () => import('@features/login/pages/site/site'),
+                canActivate: [preconfiguredSiteGuard],
             },
             {
                 path: 'credentials',

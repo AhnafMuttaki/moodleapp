@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { CoreAutoLogout } from '@features/autologout/services/autologout';
+import { CoreBrandConfig } from '@services/brand-config';
 import { CoreConfig } from '@services/config';
 import { CoreFilepool } from '@services/filepool';
 import { CoreLang } from '@services/lang';
@@ -27,6 +28,7 @@ import { CoreTime } from '@singletons/time';
  */
 export default async function(): Promise<void> {
     await Promise.all([
+        CoreBrandConfig.initialize(),
         CoreConfig.initialize(),
         CoreFilepool.initialize(),
         CoreSites.initialize(),

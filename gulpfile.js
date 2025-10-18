@@ -18,6 +18,7 @@ const BuildEnvTask = require('./gulp/task-build-env');
 const BuildIconsJsonTask = require('./gulp/task-build-icons-json');
 const OverrideLangTask = require('./gulp/task-override-lang');
 const FreezeDependenciesTask = require('./gulp/task-freeze-dependencies');
+const { buildBrandConfig, cleanBrandConfig } = require('./gulp/task-build-brand-config');
 const gulp = require('gulp');
 
 const paths = {
@@ -49,6 +50,16 @@ gulp.task('icons', (done) => {
     new BuildIconsJsonTask().run(done);
 });
 
+// Build brand configuration based on BRAND_ID environment variable.
+gulp.task('brand-config', (done) => {
+    buildBrandConfig().then(() => done()).catch(done);
+});
+
+// Clean brand configuration.
+gulp.task('brand-config-clean', (done) => {
+    cleanBrandConfig().then(() => done()).catch(done);
+});
+
 gulp.task('freeze-dependencies', (done) => {
     new FreezeDependenciesTask().run(done);
 });
@@ -66,6 +77,7 @@ gulp.task(
         'lang',
         'env',
         'icons',
+        'brand-config',
         ...(BuildBehatPluginTask.isBehatConfigured() ? ['behat'] : [])
     ]),
 );
@@ -73,6 +85,7 @@ gulp.task(
 gulp.task('watch', () => {
     gulp.watch(paths.lang, { interval: 500 }, gulp.parallel('lang'));
     gulp.watch(['./moodle.config.json', './moodle.config.*.json'], { interval: 500 }, gulp.parallel('env'));
+    gulp.watch(['./branding/**/brand-config.json'], { interval: 500 }, gulp.parallel('brand-config'));
 
     if (BuildBehatPluginTask.isBehatConfigured()) {
         gulp.watch(['./tests/behat'], { interval: 500 }, gulp.parallel('behat'));

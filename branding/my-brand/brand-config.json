@@ -1,0 +1,8 @@
+{
+    "brandId": "my-brand",
+    "displayName": "My Organization Mobile",
+    "siteUrl": "http://localhost:8081",
+    "featureToggles": {
+      "preconfiguredSite": true
+    }
+}

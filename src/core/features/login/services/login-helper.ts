@@ -437,6 +437,23 @@ export class CoreLoginHelperProvider {
             }
         }
 
+        // Check for preconfigured site
+        try {
+            const { CoreBrandConfig } = await import('@services/brand-config');
+            await CoreBrandConfig.ready();
+
+            const isPreconfiguredEnabled = await CoreBrandConfig.isPreconfiguredSiteEnabled();
+            if (isPreconfiguredEnabled) {
+                const siteUrl = await CoreBrandConfig.getSiteUrl();
+                if (siteUrl) {
+                    return ['/login/credentials', { siteUrl }];
+                }
+            }
+        } catch (error) {
+            // If brand config fails, continue with normal flow
+            CoreLogger.getInstance('CoreLoginHelper').warn('Failed to check preconfigured site, using normal flow', error);
+        }
+
         const sites = await this.getAvailableSites();
 
         if (sites.length === 1) {

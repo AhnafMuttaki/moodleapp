@@ -1,0 +1,13 @@
+{
+  "brandId": "default",
+  "displayName": "Moodle Mobile",
+  "description": "Default Moodle Mobile configuration for testing preconfigured site login",
+  "siteUrl": "http://localhost:8082",
+  "featureToggles": {
+    "preconfiguredSite": true,
+    "enforceBrandTheme": false,
+    "enableAnalytics": false,
+    "enableOnboarding": true,
+    "darkMode": true
+  }
+}
