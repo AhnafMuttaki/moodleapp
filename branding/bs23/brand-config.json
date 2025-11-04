@@ -11,9 +11,9 @@
         "onSurface": "#4992C1"
     },
     "assets": {
-        "logo": "assets/brands/bs23/bs_logo.png",
-        "splash": "assets/brands/bs23/bs_logo.png",
-        "appIcon": "assets/brands/bs23/bs_logo.png"
+        "logo": "assets/brands/bs23/logo.png",
+        "splash": "assets/brands/bs23/splash.png",
+        "appIcon": "assets/brands/bs23/icon.png"
     },
     "featureToggles": {
         "preconfiguredSite": true,
