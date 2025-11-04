@@ -1,0 +1,22 @@
+{
+    "brandId": "bs23",
+    "displayName": "Brain Station 23",
+    "siteUrl": "https://lms.elearning23.com",
+    "colors": {
+        "primary": "#4992C1",
+        "secondary": "#111E40",
+        "surface": "#ffffff",
+        "onPrimary": "#ffffff",
+        "onSecondary": "#ffffff",
+        "onSurface": "#4992C1"
+    },
+    "assets": {
+        "logo": "assets/brands/bs23/logo.png",
+        "splash": "assets/brands/bs23/splash.png",
+        "appIcon": "assets/brands/bs23/icon.png"
+    },
+    "featureToggles": {
+        "preconfiguredSite": true,
+        "enforceBrandTheme": true
+    }
+}
