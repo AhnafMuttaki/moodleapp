@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'io.ionic.starter',
-  appName: 'moodlemobile',
+  appName: 'eLearning 23',
   webDir: 'www',
   cordova: {
     preferences: {

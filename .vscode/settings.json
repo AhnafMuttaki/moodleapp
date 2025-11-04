@@ -20,5 +20,8 @@
         "moodle.config.json": "jsonc",
         "moodle.config.*.json": "jsonc",
     },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
 
 }
