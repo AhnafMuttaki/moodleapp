@@ -74,5 +74,13 @@ Thumbs.db
 /src/assets/env.json
 /src/assets/fonts/icons.json
 
+# Generated brand files (built from branding/ directory)
+/src/assets/brand-config.json
+/src/theme/brand.*.scss
+/src/theme/components/brand-theme.scss
+
+# Package lock (can be regenerated)
+package-lock.json
+
 /moodle.config.*.json
 !/moodle.config.example.json
