@@ -2,7 +2,7 @@
   "brandId": "default",
   "displayName": "Moodle Mobile",
   "description": "Default Moodle Mobile configuration for testing preconfigured site login",
-  "siteUrl": "http://localhost:8082",
+  "siteUrl": "https://10.112.51.204/moodle405/",
   "featureToggles": {
     "preconfiguredSite": true,
     "enforceBrandTheme": false,

@@ -23,6 +23,7 @@ import { CoreCronDelegate } from '@services/cron';
 import { CoreEvents } from '@singletons/events';
 import { hasSitesGuard } from './guards/has-sites';
 import { preconfiguredSiteGuard } from './guards/preconfigured-site';
+import { secretKeyCheckGuard } from './guards/secret-key-check';
 
 /**
  * Get login services.
@@ -47,34 +48,44 @@ const appRoutes: Routes = [
                 redirectTo: 'sites',
             },
             {
+                path: 'secret-key-setup',
+                loadComponent: () => import('@features/login/pages/secret-key-setup/secret-key-setup'),
+                // No guard - this is the first-time setup page
+            },
+            {
                 path: 'site',
                 loadComponent: () => import('@features/login/pages/site/site'),
-                canActivate: [preconfiguredSiteGuard],
+                canActivate: [secretKeyCheckGuard, preconfiguredSiteGuard],
             },
             {
                 path: 'credentials',
                 loadComponent: () => CoreLoginHelper.getCredentialsPage(),
+                canActivate: [secretKeyCheckGuard],
             },
             {
                 path: 'sites',
                 loadComponent: () => import('@features/login/pages/sites/sites'),
-                canActivate: [hasSitesGuard],
+                canActivate: [secretKeyCheckGuard, hasSitesGuard],
             },
             {
                 path: 'forgottenpassword',
                 loadComponent: () => import('@features/login/pages/forgotten-password/forgotten-password'),
+                canActivate: [secretKeyCheckGuard],
             },
             {
                 path: 'changepassword',
                 loadComponent: () => import('@features/login/pages/change-password/change-password'),
+                canActivate: [secretKeyCheckGuard],
             },
             {
                 path: 'emailsignup',
                 loadComponent: () => import('@features/login/pages/email-signup/email-signup'),
+                canActivate: [secretKeyCheckGuard],
             },
             {
                 path: 'reconnect',
                 loadComponent: () => CoreLoginHelper.getReconnectPage(),
+                canActivate: [secretKeyCheckGuard],
             },
         ],
         canActivate: [redirectGuard],
@@ -105,4 +116,4 @@ const appRoutes: Routes = [
         }),
     ],
 })
-export class CoreLoginModule {}
+export class CoreLoginModule { }

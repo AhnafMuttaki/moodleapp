@@ -14,6 +14,7 @@
 
 import { CoreAutoLogout } from '@features/autologout/services/autologout';
 import { CoreBrandConfig } from '@services/brand-config';
+import { CoreDynamicBrandConfig } from '@services/dynamic-brand-config';
 import { CoreConfig } from '@services/config';
 import { CoreFilepool } from '@services/filepool';
 import { CoreLang } from '@services/lang';
@@ -26,7 +27,7 @@ import { CoreTime } from '@singletons/time';
 /**
  * Initializes various core components asynchronously.
  */
-export default async function(): Promise<void> {
+export default async function (): Promise<void> {
     await Promise.all([
         CoreBrandConfig.initialize(),
         CoreConfig.initialize(),
@@ -39,4 +40,22 @@ export default async function(): Promise<void> {
         CoreTime.initialize(),
         CoreAutoLogout.initialize(),
     ]);
+
+    // Load cached branding if secret key is configured (non-blocking)
+    try {
+        console.log('[InitializeServices] Checking for cached branding...');
+        const isConfigured = await CoreDynamicBrandConfig.isConfigured();
+        console.log('[InitializeServices] Is secret key configured:', isConfigured);
+
+        if (isConfigured) {
+            console.log('[InitializeServices] Loading cached branding...');
+            await CoreDynamicBrandConfig.loadCachedBranding();
+            console.log('[InitializeServices] Cached branding loaded');
+        } else {
+            console.log('[InitializeServices] No cached branding, user needs to configure secret key');
+        }
+    } catch (error) {
+        console.error('[InitializeServices] Error loading branding, continuing anyway:', error);
+        // Don't block initialization if branding fails
+    }
 }
