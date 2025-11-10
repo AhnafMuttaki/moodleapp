@@ -14,6 +14,7 @@
 
 import { CoreAutoLogout } from '@features/autologout/services/autologout';
 import { CoreBrandConfig } from '@services/brand-config';
+import { CoreBrandTheme } from '@services/brand-theme';
 import { CoreDynamicBrandConfig } from '@services/dynamic-brand-config';
 import { CoreConfig } from '@services/config';
 import { CoreFilepool } from '@services/filepool';
@@ -51,6 +52,11 @@ export default async function (): Promise<void> {
             console.log('[InitializeServices] Loading cached branding...');
             await CoreDynamicBrandConfig.loadCachedBranding();
             console.log('[InitializeServices] Cached branding loaded');
+
+            // Initialize brand theme to ensure colors are applied
+            console.log('[InitializeServices] Initializing brand theme...');
+            await CoreBrandTheme.initialize();
+            console.log('[InitializeServices] Brand theme initialized');
         } else {
             console.log('[InitializeServices] No cached branding, user needs to configure secret key');
         }

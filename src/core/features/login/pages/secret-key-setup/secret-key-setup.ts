@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import { Component, OnInit } from '@angular/core';
-import { CoreDynamicBrandConfig } from '@services/dynamic-brand-config';
+import { CoreDynamicBrandConfig, CoreDynamicBrandConfigProvider } from '@services/dynamic-brand-config';
 import { CoreDomUtils } from '@services/utils/dom';
 import { CoreNavigator } from '@services/navigator';
 import { CoreSharedModule } from '@/core/shared.module';
@@ -32,6 +32,11 @@ export default class CoreLoginSecretKeySetupPage implements OnInit {
     secretKey = '';
     loading = false;
 
+    // Helper to get properly typed singleton
+    private get dynamicBrandConfig(): CoreDynamicBrandConfigProvider {
+        return CoreDynamicBrandConfig as unknown as CoreDynamicBrandConfigProvider;
+    }
+
     /**
      * @inheritdoc
      */
@@ -46,7 +51,7 @@ export default class CoreLoginSecretKeySetupPage implements OnInit {
      */
     protected async checkExistingConfig(): Promise<void> {
         console.log('[SecretKeySetupPage] Checking existing config...');
-        const isConfigured = await CoreDynamicBrandConfig.isSecretKeyConfigured();
+        const isConfigured = await this.dynamicBrandConfig.isSecretKeyConfigured();
 
         console.log('[SecretKeySetupPage] Is configured:', isConfigured);
 
@@ -75,7 +80,7 @@ export default class CoreLoginSecretKeySetupPage implements OnInit {
 
         try {
             console.log('[SecretKeySetupPage] Validating secret key with API...');
-            const response = await CoreDynamicBrandConfig.validateAndFetchBranding(this.secretKey.trim());
+            const response = await this.dynamicBrandConfig.validateAndFetchBranding(this.secretKey.trim());
 
             console.log('[SecretKeySetupPage] API response:', response);
 

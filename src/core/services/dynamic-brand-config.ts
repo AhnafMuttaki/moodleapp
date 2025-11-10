@@ -13,10 +13,13 @@
 // limitations under the License.
 
 import { Injectable } from '@angular/core';
-import { CoreConfig } from '@services/config';
+import { CoreConfig, CoreConfigProvider } from '@services/config';
 import { CoreFile } from '@services/file';
 import { CoreWS } from '@services/ws';
+import { CoreBrandConfig, CoreBrandConfigProvider } from '@services/brand-config';
+import { CoreBrandTheme, CoreBrandThemeProvider } from '@services/brand-theme';
 import { makeSingleton } from '@singletons';
+import { BrandConfig } from '@/types/brand-config';
 
 export interface DynamicBrandConfig {
     appId?: string;
@@ -55,6 +58,19 @@ const BRANDING_API_URL = 'http://localhost/moodleapp/branding-api/public/brand-c
 @Injectable({ providedIn: 'root' })
 export class CoreDynamicBrandConfigProvider {
 
+    // Helper methods to work around TypeScript singleton typing issues
+    private get config(): CoreConfigProvider {
+        return CoreConfig as unknown as CoreConfigProvider;
+    }
+
+    private get brandConfig(): CoreBrandConfigProvider {
+        return CoreBrandConfig as unknown as CoreBrandConfigProvider;
+    }
+
+    private get brandTheme(): CoreBrandThemeProvider {
+        return CoreBrandTheme as unknown as CoreBrandThemeProvider;
+    }
+
     /**
      * Check if secret key has been set up.
      *
@@ -62,7 +78,7 @@ export class CoreDynamicBrandConfigProvider {
      */
     async isSecretKeyConfigured(): Promise<boolean> {
         try {
-            const secretKey = await CoreConfig.get<string>(STORAGE_KEY_SECRET);
+            const secretKey = await this.config.get<string>(STORAGE_KEY_SECRET);
 
             return !!secretKey;
         } catch (error) {
@@ -99,6 +115,53 @@ export class CoreDynamicBrandConfigProvider {
             console.log('[CoreDynamicBrandConfig] Applying cached branding:', config);
             // Apply branding to CSS variables
             await this.applyBranding(config);
+
+            // Update CoreBrandConfig with cached branding
+            const logoData = await this.getCachedAsset('logo');
+            const splashData = await this.getCachedAsset('splash');
+            const iconData = await this.getCachedAsset('icon');
+
+            console.log('[CoreDynamicBrandConfig] Cached assets:', {
+                hasLogo: !!logoData,
+                hasSplash: !!splashData,
+                hasIcon: !!iconData,
+            });
+
+            const brandConfigUpdate: Partial<BrandConfig> = {
+                brandId: 'dynamic',
+                displayName: config.appName || 'Moodle Mobile',
+                featureToggles: {
+                    enforceBrandTheme: true,
+                    preconfiguredSite: config.preconfiguredSite || false,
+                },
+            };
+
+            // Only include siteUrl if it exists
+            if (config.siteUrl) {
+                brandConfigUpdate.siteUrl = config.siteUrl;
+            }
+
+            // Only include colors if primary color exists
+            if (config.primaryColor) {
+                brandConfigUpdate.colors = {
+                    primary: config.primaryColor,
+                };
+                // Add secondary color if it exists
+                if (config.secondaryColor) {
+                    brandConfigUpdate.colors.secondary = config.secondaryColor;
+                }
+            }
+
+            // Only include assets if at least one exists
+            if (logoData || splashData || iconData) {
+                brandConfigUpdate.assets = {};
+                if (logoData) brandConfigUpdate.assets.logo = logoData;
+                if (splashData) brandConfigUpdate.assets.splash = splashData;
+                if (iconData) brandConfigUpdate.assets.appIcon = iconData;
+            }
+
+            this.brandConfig.updateConfig(brandConfigUpdate);
+
             console.log('[CoreDynamicBrandConfig] Cached branding applied successfully');
         } catch (error) {
             console.error('[CoreDynamicBrandConfig] Error loading cached branding:', error);
@@ -112,18 +175,29 @@ export class CoreDynamicBrandConfigProvider {
      * @param config Brand configuration.
      */
     protected async applyBranding(config: DynamicBrandConfig): Promise<void> {
-        const root = document.documentElement;
+        console.log('[CoreDynamicBrandConfig] Applying branding:', config);
+
+        // Create brand colors object
+        const brandColors: any = {};
 
         if (config.primaryColor) {
-            root.style.setProperty('--ion-color-primary', config.primaryColor);
+            brandColors.primary = config.primaryColor;
+            brandColors.onPrimary = '#ffffff'; // Default contrast color
         }
 
         if (config.secondaryColor) {
-            root.style.setProperty('--ion-color-secondary', config.secondaryColor);
+            brandColors.secondary = config.secondaryColor;
+            brandColors.onSecondary = '#ffffff'; // Default contrast color
         }
 
-        if (config.accentColor) {
-            root.style.setProperty('--ion-color-accent', config.accentColor);
+        // Always set surface colors
+        brandColors.surface = '#ffffff';
+        brandColors.onSurface = config.primaryColor || '#282828';
+
+        // Use CoreBrandTheme to apply colors properly (same as static branding)
+        if (Object.keys(brandColors).length > 0) {
+            await this.brandTheme.applyBrandTheme(brandColors);
+            console.log('[CoreDynamicBrandConfig] Brand colors applied via CoreBrandTheme');
         }
 
         // Store in window for other components to access
@@ -158,9 +232,9 @@ export class CoreDynamicBrandConfigProvider {
             }
 
             // Store the secret key and configuration
-            await CoreConfig.set(STORAGE_KEY_SECRET, secretKey);
-            await CoreConfig.set(STORAGE_KEY_CONFIG, JSON.stringify(data.data.brandConfig));
-            await CoreConfig.set(STORAGE_KEY_ORG_ID, data.data.organizationId);
+            await this.config.set(STORAGE_KEY_SECRET, secretKey);
+            await this.config.set(STORAGE_KEY_CONFIG, JSON.stringify(data.data.brandConfig));
+            await this.config.set(STORAGE_KEY_ORG_ID, data.data.organizationId);
 
             // Download and store assets
             await this.downloadAndStoreAssets(data.data.assets);
@@ -168,9 +242,78 @@ export class CoreDynamicBrandConfigProvider {
             // Apply branding immediately
             await this.applyBranding(data.data.brandConfig);
 
+            // Update CoreBrandConfig with dynamic branding
+            await this.updateCoreBrandConfig(data.data.brandConfig, data.data.assets);
+
             return data;
         } catch (error) {
             throw error;
+        }
+    }
+
+    /**
+     * Update CoreBrandConfig with dynamic branding data.
+     *
+     * @param config Brand configuration.
+     * @param assets Brand assets.
+     */
+    protected async updateCoreBrandConfig(config: DynamicBrandConfig, assets: BrandAssets): Promise<void> {
+        try {
+            console.log('[CoreDynamicBrandConfig] Updating CoreBrandConfig with dynamic branding...');
+
+            // Get the cached asset data URLs
+            const logoData = await this.getCachedAsset('logo');
+            const splashData = await this.getCachedAsset('splash');
+            const iconData = await this.getCachedAsset('icon');
+
+            // Create a brand config object compatible with CoreBrandConfig
+            const brandConfigUpdate: Partial<BrandConfig> = {
+                brandId: 'dynamic',
+                displayName: config.appName || 'Moodle Mobile',
+                description: 'Dynamically configured branding',
+                featureToggles: {
+                    preconfiguredSite: config.preconfiguredSite || false,
+                    enforceBrandTheme: true, // Always enforce for dynamic branding
+                    enableAnalytics: false,
+                    enableOnboarding: true,
+                    darkMode: true,
+                },
+            };
+
+            // Only include siteUrl if it exists
+            if (config.siteUrl) {
+                brandConfigUpdate.siteUrl = config.siteUrl;
+            }
+
+            // Only include colors if primary color exists
+            if (config.primaryColor) {
+                brandConfigUpdate.colors = {
+                    primary: config.primaryColor,
+                    surface: '#ffffff',
+                    onPrimary: '#ffffff',
+                    onSecondary: '#ffffff',
+                    onSurface: config.primaryColor || '#282828',
+                };
+                // Add secondary color if it exists
+                if (config.secondaryColor) {
+                    brandConfigUpdate.colors.secondary = config.secondaryColor;
+                }
+            }
+
+            // Only include assets if at least one exists
+            if (logoData || splashData || iconData) {
+                brandConfigUpdate.assets = {};
+                if (logoData) brandConfigUpdate.assets.logo = logoData;
+                if (splashData) brandConfigUpdate.assets.splash = splashData;
+                if (iconData) brandConfigUpdate.assets.appIcon = iconData;
+            }
+
+            // Update CoreBrandConfig
+            this.brandConfig.updateConfig(brandConfigUpdate);
+
+            console.log('[CoreDynamicBrandConfig] CoreBrandConfig updated successfully');
+        } catch (error) {
+            console.error('[CoreDynamicBrandConfig] Failed to update CoreBrandConfig:', error);
         }
     }
 
@@ -225,7 +368,7 @@ export class CoreDynamicBrandConfigProvider {
             const base64Data = await base64Promise;
 
             // Store in config
-            await CoreConfig.set(`dynamic_branding_asset_${assetType}`, base64Data);
+            await this.config.set(`dynamic_branding_asset_${assetType}`, base64Data);
         } catch (error) {
             console.error(`Failed to download ${assetType}:`, error);
         }
@@ -237,7 +380,7 @@ export class CoreDynamicBrandConfigProvider {
      * @returns Promise resolved with cached configuration or null.
      */
     async getCachedConfig(): Promise<DynamicBrandConfig | null> {
-        const configString = await CoreConfig.get<string>(STORAGE_KEY_CONFIG);
+        const configString = await this.config.get<string>(STORAGE_KEY_CONFIG);
 
         if (!configString) {
             return null;
@@ -257,19 +400,19 @@ export class CoreDynamicBrandConfigProvider {
      * @returns Promise resolved with base64 data URL or null.
      */
     async getCachedAsset(assetType: string): Promise<string | null> {
-        return await CoreConfig.get<string>(`dynamic_branding_asset_${assetType}`);
+        return await this.config.get<string>(`dynamic_branding_asset_${assetType}`);
     }
 
     /**
      * Clear all stored branding data.
      */
     async clearBrandingData(): Promise<void> {
-        await CoreConfig.delete(STORAGE_KEY_SECRET);
-        await CoreConfig.delete(STORAGE_KEY_CONFIG);
-        await CoreConfig.delete(STORAGE_KEY_ORG_ID);
-        await CoreConfig.delete('dynamic_branding_asset_logo');
-        await CoreConfig.delete('dynamic_branding_asset_splash');
-        await CoreConfig.delete('dynamic_branding_asset_icon');
+        await this.config.delete(STORAGE_KEY_SECRET);
+        await this.config.delete(STORAGE_KEY_CONFIG);
+        await this.config.delete(STORAGE_KEY_ORG_ID);
+        await this.config.delete('dynamic_branding_asset_logo');
+        await this.config.delete('dynamic_branding_asset_splash');
+        await this.config.delete('dynamic_branding_asset_icon');
     }
 
     /**
@@ -278,7 +421,7 @@ export class CoreDynamicBrandConfigProvider {
      * @returns Promise resolved with organization ID or null.
      */
     async getOrganizationId(): Promise<number | null> {
-        return await CoreConfig.get<number>(STORAGE_KEY_ORG_ID);
+        return await this.config.get<number>(STORAGE_KEY_ORG_ID);
     }
 }
 

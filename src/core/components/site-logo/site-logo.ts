@@ -58,13 +58,18 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
 
     protected updateSiteObserver?: CoreEventObserver;
 
-    constructor(protected brandConfig: CoreBrandConfigProvider) {}
+    constructor(protected brandConfig: CoreBrandConfigProvider) { }
 
     /**
      * @inheritdoc
      */
     async ngOnInit(): Promise<void> {
-        this.loadSite();
+        try {
+            this.loadSite();
+        } catch (error) {
+            // No site available yet (e.g., initial login screen)
+            console.debug('[CoreSiteLogo] No site available, will show brand logo only');
+        }
 
         this.updateSiteObserver = CoreEvents.on(CoreEvents.SITE_UPDATED, async () => {
             await this.loadInfo();
@@ -90,10 +95,17 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
     /**
      * Load the site and siteId.
      *
-     * @returns Site.
+     * @returns Site or undefined if no site available.
      */
-    protected loadSite(): CoreSite | CoreUnauthenticatedSite {
-        this.site = this.site ?? CoreSites.getRequiredCurrentSite();
+    protected loadSite(): CoreSite | CoreUnauthenticatedSite | undefined {
+        if (!this.site) {
+            try {
+                this.site = CoreSites.getRequiredCurrentSite();
+            } catch (error) {
+                // No site available yet
+                return undefined;
+            }
+        }
 
         // During login, the siteId could be not defined yet.
         if (!this.siteId && this.site instanceof CoreSite) {
@@ -101,7 +113,7 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
         }
 
         return this.site;
-   }
+    }
 
     /**
      * Load the site name and logo.
@@ -109,14 +121,22 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
     protected async loadInfo(): Promise<void> {
         const site = this.loadSite();
 
+        // Load brand logo first (works even without a site)
+        await this.loadBrandLogo();
+
+        if (!site) {
+            // No site available yet (e.g., initial login screen)
+            // Just use brand logo if available, otherwise fallback
+            this.logoLoaded = true;
+            this.showSiteName = false;
+            return;
+        }
+
         this.siteName = await site.getSiteName() || '';
 
         this.showSiteName = this.logoType !== 'top' || site.getShowTopLogo() === 'hidden';
 
         this.logoError = false;
-
-        // Load brand logo if available
-        await this.loadBrandLogo();
 
         if (this.logoType === 'top' && site.getShowTopLogo() === 'hidden') {
             this.showLogo = false;
@@ -138,13 +158,18 @@ export class CoreSiteLogoComponent implements OnInit, OnDestroy {
     protected async loadBrandLogo(): Promise<void> {
         try {
             const isEnforced = await this.brandConfig.isBrandThemeEnforced();
+            console.log('[CoreSiteLogo] Brand theme enforced:', isEnforced);
+
             if (!isEnforced) {
                 return;
             }
 
             const brandLogo = await this.brandConfig.getLogoAsset(this.logoType);
+            console.log('[CoreSiteLogo] Brand logo loaded:', brandLogo ? 'Yes (length: ' + brandLogo.length + ')' : 'No');
+
             if (brandLogo) {
                 this.brandLogo = brandLogo;
+                console.log('[CoreSiteLogo] Brand logo set for display');
             }
         } catch (error) {
             // Silently fail - brand logo is optional

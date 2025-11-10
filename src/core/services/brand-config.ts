@@ -372,6 +372,30 @@ export class CoreBrandConfigProvider {
         this.logger.debug('Brand configuration reset to default');
     }
 
+    /**
+     * Update brand configuration dynamically (for secret-key based branding).
+     *
+     * @param config New brand configuration.
+     */
+    updateConfig(config: Partial<BrandConfig>): void {
+        if (!this.config) {
+            this.config = this.getDefaultConfig();
+        }
+
+        // Merge the new configuration with existing
+        this.config = {
+            ...this.config,
+            ...config,
+            colors: config.colors ? { ...this.config.colors, ...config.colors } : this.config.colors,
+            assets: config.assets ? { ...this.config.assets, ...config.assets } : this.config.assets,
+            featureToggles: config.featureToggles
+                ? { ...this.config.featureToggles, ...config.featureToggles }
+                : this.config.featureToggles,
+        };
+
+        this.logger.debug('Brand configuration updated dynamically', this.config);
+    }
+
 }
 
 export const CoreBrandConfig = makeSingleton(CoreBrandConfigProvider);

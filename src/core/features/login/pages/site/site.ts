@@ -52,6 +52,7 @@ import { CorePromiseUtils } from '@singletons/promise-utils';
 import { CoreCountries } from '@singletons/countries';
 import { CoreAlerts } from '@services/overlays/alerts';
 import { CoreSharedModule } from '@/core/shared.module';
+import { CoreSiteLogoComponent } from '@components/site-logo/site-logo';
 
 /**
  * Site (url) chooser when adding a new site.
@@ -62,6 +63,7 @@ import { CoreSharedModule } from '@/core/shared.module';
     styleUrls: ['site.scss', '../../login.scss'],
     imports: [
         CoreSharedModule,
+        CoreSiteLogoComponent,
     ],
 })
 export default class CoreLoginSitePage implements OnInit {
@@ -139,7 +141,7 @@ export default class CoreLoginSitePage implements OnInit {
                 const sites = await CoreSites.findSites(search);
 
                 // Add UI tweaks.
-                this.sites = this.extendCoreLoginSiteInfo(<CoreLoginSiteInfoExtended[]> sites);
+                this.sites = this.extendCoreLoginSiteInfo(<CoreLoginSiteInfoExtended[]>sites);
 
                 this.hasSites = !!this.sites.length;
             } else {
@@ -160,7 +162,7 @@ export default class CoreLoginSitePage implements OnInit {
      */
     protected async initSiteSelector(): Promise<string> {
         const availableSites = await CoreLoginHelper.getAvailableSites();
-        this.fixedSites = this.extendCoreLoginSiteInfo(<CoreLoginSiteInfoExtended[]> availableSites);
+        this.fixedSites = this.extendCoreLoginSiteInfo(<CoreLoginSiteInfoExtended[]>availableSites);
         this.siteSelector = 'list'; // In case it's not defined
 
         // Do not show images if none are set.
