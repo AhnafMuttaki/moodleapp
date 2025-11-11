@@ -40,8 +40,8 @@ export interface BrandAssets {
 export interface BrandConfigResponse {
     success: boolean;
     data: {
-        organizationId: number;
-        organizationName: string;
+        secretKeyId: number;
+        adminUsername: string;
         brandConfig: DynamicBrandConfig;
         assets: BrandAssets;
     };
@@ -49,8 +49,8 @@ export interface BrandConfigResponse {
 
 const STORAGE_KEY_SECRET = 'dynamic_branding_secret_key';
 const STORAGE_KEY_CONFIG = 'dynamic_branding_config';
-const STORAGE_KEY_ORG_ID = 'dynamic_branding_org_id';
-const BRANDING_API_URL = 'http://localhost/moodleapp/branding-api/public/brand-config.php';
+const STORAGE_KEY_SECRET_KEY_ID = 'dynamic_branding_secret_key_id';
+const BRANDING_API_URL = 'http://10.112.11.39/moodleapp/moodleapp-branding-api/public/brand-config.php';
 
 /**
  * Service to handle dynamic branding configuration based on secret key validation.
@@ -234,7 +234,7 @@ export class CoreDynamicBrandConfigProvider {
             // Store the secret key and configuration
             await this.config.set(STORAGE_KEY_SECRET, secretKey);
             await this.config.set(STORAGE_KEY_CONFIG, JSON.stringify(data.data.brandConfig));
-            await this.config.set(STORAGE_KEY_ORG_ID, data.data.organizationId);
+            await this.config.set(STORAGE_KEY_SECRET_KEY_ID, data.data.secretKeyId);
 
             // Download and store assets
             await this.downloadAndStoreAssets(data.data.assets);
@@ -409,19 +409,19 @@ export class CoreDynamicBrandConfigProvider {
     async clearBrandingData(): Promise<void> {
         await this.config.delete(STORAGE_KEY_SECRET);
         await this.config.delete(STORAGE_KEY_CONFIG);
-        await this.config.delete(STORAGE_KEY_ORG_ID);
+        await this.config.delete(STORAGE_KEY_SECRET_KEY_ID);
         await this.config.delete('dynamic_branding_asset_logo');
         await this.config.delete('dynamic_branding_asset_splash');
         await this.config.delete('dynamic_branding_asset_icon');
     }
 
     /**
-     * Get the organization ID.
+     * Get the secret key ID.
      *
-     * @returns Promise resolved with organization ID or null.
+     * @returns Promise resolved with secret key ID or null.
      */
-    async getOrganizationId(): Promise<number | null> {
-        return await this.config.get<number>(STORAGE_KEY_ORG_ID);
+    async getSecretKeyId(): Promise<number | null> {
+        return await this.config.get<number>(STORAGE_KEY_SECRET_KEY_ID);
     }
 }
 

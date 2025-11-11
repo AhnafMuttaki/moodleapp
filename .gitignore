@@ -85,3 +85,4 @@ package-lock.json
 /moodle.config.*.json
 !/moodle.config.example.json
 /branding-api
+/moodleapp-branding-api
